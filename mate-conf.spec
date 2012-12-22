@@ -2,7 +2,7 @@ Summary:	MateConf configuration database system
 Summary(pl.UTF-8):	MateConf - system bazy danych konfiguracji
 Name:		mate-conf
 Version:	1.4.0
-Release:	1
+Release:	2
 License:	LGPL v2+
 Group:		Libraries
 Source0:	http://pub.mate-desktop.org/releases/1.4/%{name}-%{version}.tar.xz
@@ -141,6 +141,14 @@ rm -rf $RPM_BUILD_ROOT
 
 %clean
 rm -rf $RPM_BUILD_ROOT
+
+%post
+umask 022
+%{_bindir}/gio-querymodules %{_libdir}/gio/modules || :
+
+%postun
+umask 022
+%{_bindir}/gio-querymodules %{_libdir}/gio/modules || :
 
 %post	libs -p /sbin/ldconfig
 %postun	libs -p /sbin/ldconfig
