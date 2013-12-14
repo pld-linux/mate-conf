@@ -1,12 +1,16 @@
 #
 # Conditional build:
-%bcond_with	gtk3	# use GTK+ 3.x instead of 2.x
-#
+%bcond_without	apidocs		# disable gtk-doc
+%bcond_without	gtk		# disable GTK at all
+%bcond_with	gtk3		# use GTK+ 3.x instead of 2.x
+%bcond_without	ldap		# without Evolution Data Sources LDAP backend
+%bcond_without	static_libs	# don't build static libraries
+
 Summary:	MateConf configuration database system
 Summary(pl.UTF-8):	MateConf - system bazy danych konfiguracji
 Name:		mate-conf
 Version:	1.4.0
-Release:	1
+Release:	2
 License:	LGPL v2+
 Group:		Libraries
 Source0:	http://pub.mate-desktop.org/releases/1.4/%{name}-%{version}.tar.xz
@@ -19,22 +23,26 @@ BuildRequires:	dbus-glib-devel >= 0.74
 BuildRequires:	gettext-devel
 BuildRequires:	glib2-devel >= 1:2.26.0
 BuildRequires:	gobject-introspection-devel >= 0.9.5
-BuildRequires:	gtk-doc >= 1.0
-# does MATE allow gtk+3 everywhere?
+%{?with_apidocs:BuildRequires:	gtk-doc >= 1.0}
+BuildRequires:	rpmbuild(macros) >= 1.527
+%if %{with gtk}
 %{!?with_gtk3:BuildRequires:	gtk+2-devel >= 2:2.14.0}
 %{?with_gtk3:BuildRequires:	gtk+3-devel >= 3.0.0}
+%endif
 BuildRequires:	intltool >= 0.35.0
-BuildRequires:	libxml2-devel >= 2.0
 BuildRequires:	libtool
+BuildRequires:	libxml2-devel >= 2.0
 BuildRequires:	mate-corba-devel
-BuildRequires:	openldap-devel
+%{?with_ldap:BuildRequires:	openldap-devel}
 BuildRequires:	pkgconfig
 BuildRequires:	polkit-devel
 BuildRequires:	tar >= 1:1.22
 BuildRequires:	xz
 Requires:	%{name}-libs = %{version}-%{release}
+%if %{with gtk}
 %{!?with_gtk3:Requires:	gtk+2 >= 2:2.14.0}
 %{?with_gtk3:Requires:	gtk+3 >= 3.0.0}
+%endif
 BuildRoot:	%{tmpdir}/%{name}-%{version}-root-%(id -u -n)
 
 %description
@@ -132,18 +140,26 @@ automatycznie skonfigurowane do używania tych adresów.
 %{__autoheader}
 %{__automake}
 %configure \
-	--with-html-dir=%{_gtkdocdir}
+	--enable-defaults-service \
+	--enable-gsettings-backend=yes \
+	%{?with_gtk:--enable-gtk %{?with_gtk3:--with-gtk=3.0}} \
+	%{?with_apidocs:--enable-gtk-doc --with-html-dir=%{_gtkdocdir}} \
+	--enable-introspection \
+	%{__with_without ldap openldap} \
+	%{__disable static_libs static} \
+	%{nil}
 %{__make}
 
 %install
 rm -rf $RPM_BUILD_ROOT
-
 %{__make} install \
 	DESTDIR=$RPM_BUILD_ROOT
 
 # loadable modules
-%{__rm} $RPM_BUILD_ROOT%{_libdir}/MateConf/2/lib*.{la,a}
-%{__rm} $RPM_BUILD_ROOT%{_libdir}/gio/modules/lib*.{la,a}
+%{__rm} $RPM_BUILD_ROOT%{_libdir}/MateConf/2/lib*.la
+%{__rm} $RPM_BUILD_ROOT%{_libdir}/gio/modules/lib*.la
+%{__rm} -f $RPM_BUILD_ROOT%{_libdir}/MateConf/2/lib*.a
+%{__rm} -f $RPM_BUILD_ROOT%{_libdir}/gio/modules/lib*.a
 # obsoleted by pkg-config
 %{__rm} $RPM_BUILD_ROOT%{_libdir}/libmateconf-2.la
 
@@ -151,6 +167,14 @@ rm -rf $RPM_BUILD_ROOT
 
 %clean
 rm -rf $RPM_BUILD_ROOT
+
+%post
+umask 022
+%{_bindir}/gio-querymodules %{_libdir}/gio/modules || :
+
+%postun
+umask 022
+%{_bindir}/gio-querymodules %{_libdir}/gio/modules || :
 
 %post	libs -p /sbin/ldconfig
 %postun	libs -p /sbin/ldconfig
@@ -170,7 +194,7 @@ rm -rf $RPM_BUILD_ROOT
 %dir %{_libdir}/MateConf/2
 %attr(755,root,root) %{_libdir}/MateConf/2/libmateconfbackend-oldxml.so
 %attr(755,root,root) %{_libdir}/MateConf/2/libmateconfbackend-xml.so
-%{_sysconfdir}/dbus-1/system.d/org.mate.MateConf.Defaults.conf
+/etc/dbus-1/system.d/org.mate.MateConf.Defaults.conf
 %dir %{_sysconfdir}/mateconf
 %dir %{_sysconfdir}/mateconf/2
 %config(noreplace) %verify(not md5 mtime size) %{_sysconfdir}/mateconf/2/path
@@ -178,7 +202,6 @@ rm -rf $RPM_BUILD_ROOT
 %dir %{_sysconfdir}/mateconf/mateconf.xml.mandatory
 %dir %{_sysconfdir}/mateconf/mateconf.xml.system
 %{_sysconfdir}/xdg/autostart/mateconf-gsettings-data-convert.desktop
-%dir %{_datadir}/MateConf
 %{_datadir}/dbus-1/services/org.mate.MateConf.service
 %{_datadir}/dbus-1/system-services/org.mate.MateConf.Defaults.service
 %{_datadir}/polkit-1/actions/org.mate.mateconf.defaults.policy
@@ -201,18 +224,25 @@ rm -rf $RPM_BUILD_ROOT
 %{_pkgconfigdir}/mateconf-2.0.pc
 %{_aclocaldir}/mateconf-2.m4
 
+%if %{with static_libs}
 %files static
 %defattr(644,root,root,755)
 %{_libdir}/libmateconf-2.a
+%endif
 
+%if %{with apidocs}
 %files apidocs
 %defattr(644,root,root,755)
 %{_gtkdocdir}/mateconf
+%endif
 
+%if %{with ldap}
 %files backend-evoldap
 %defattr(644,root,root,755)
 %doc backends/README.evoldap
 %attr(755,root,root) %{_libdir}/MateConf/2/libmateconfbackend-evoldap.so
 %config(noreplace) %verify(not md5 mtime size) %{_sysconfdir}/mateconf/2/evoldap.conf
+%dir %{_datadir}/MateConf
 %dir %{_datadir}/MateConf/schema
 %{_datadir}/MateConf/schema/evoldap.schema
+%endif
