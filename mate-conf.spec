@@ -1,3 +1,7 @@
+#
+# Conditional build:
+%bcond_with	gtk3	# use GTK+ 3.x instead of 2.x
+#
 Summary:	MateConf configuration database system
 Summary(pl.UTF-8):	MateConf - system bazy danych konfiguracji
 Name:		mate-conf
@@ -17,7 +21,8 @@ BuildRequires:	glib2-devel >= 1:2.26.0
 BuildRequires:	gobject-introspection-devel >= 0.9.5
 BuildRequires:	gtk-doc >= 1.0
 # does MATE allow gtk+3 everywhere?
-BuildRequires:	gtk+2-devel >= 2:2.14.0
+%{!?with_gtk3:BuildRequires:	gtk+2-devel >= 2:2.14.0}
+%{?with_gtk3:BuildRequires:	gtk+3-devel >= 3.0.0}
 BuildRequires:	intltool >= 0.35.0
 BuildRequires:	libxml2-devel >= 2.0
 BuildRequires:	libtool
@@ -28,6 +33,8 @@ BuildRequires:	polkit-devel
 BuildRequires:	tar >= 1:1.22
 BuildRequires:	xz
 Requires:	%{name}-libs = %{version}-%{release}
+%{!?with_gtk3:Requires:	gtk+2 >= 2:2.14.0}
+%{?with_gtk3:Requires:	gtk+3 >= 3.0.0}
 BuildRoot:	%{tmpdir}/%{name}-%{version}-root-%(id -u -n)
 
 %description
@@ -44,6 +51,7 @@ graficznego MATE, ale nie wymaga MATE.
 Summary:	Shared MateConf library
 Summary(pl.UTF-8):	Biblioteka współdzielona MateConf
 Group:		Libraries
+Requires:	glib2 >= 1:2.26.0
 
 %description libs
 Shared MateConf library.
@@ -56,6 +64,8 @@ Summary:	Header files for MateConf library
 Summary(pl.UTF-8):	Pliki nagłówkowe biblioteki MateConf
 Group:		Development/Libraries
 Requires:	%{name}-libs = %{version}-%{release}
+Requires:	glib2-devel >= 1:2.26.0
+Requires:	mate-corba-devel
 
 %description devel
 Header files for MateConf library.
