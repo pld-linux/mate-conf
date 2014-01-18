@@ -1,3 +1,4 @@
+# NOTE: deprecated, MateConf has been replaced by GSettings in MATE >= 1.5
 #
 # Conditional build:
 %bcond_without	apidocs		# disable gtk-doc
@@ -152,14 +153,18 @@ automatycznie skonfigurowane do używania tych adresów.
 
 %install
 rm -rf $RPM_BUILD_ROOT
+install -d $RPM_BUILD_ROOT%{_sysconfdir}/mateconf/schemas
+
 %{__make} install \
 	DESTDIR=$RPM_BUILD_ROOT
 
 # loadable modules
 %{__rm} $RPM_BUILD_ROOT%{_libdir}/MateConf/2/lib*.la
 %{__rm} $RPM_BUILD_ROOT%{_libdir}/gio/modules/lib*.la
-%{__rm} -f $RPM_BUILD_ROOT%{_libdir}/MateConf/2/lib*.a
-%{__rm} -f $RPM_BUILD_ROOT%{_libdir}/gio/modules/lib*.a
+%if %{with static_libs}
+%{__rm} $RPM_BUILD_ROOT%{_libdir}/MateConf/2/lib*.a
+%{__rm} $RPM_BUILD_ROOT%{_libdir}/gio/modules/lib*.a
+%endif
 # obsoleted by pkg-config
 %{__rm} $RPM_BUILD_ROOT%{_libdir}/libmateconf-2.la
 
@@ -201,6 +206,7 @@ umask 022
 %dir %{_sysconfdir}/mateconf/mateconf.xml.defaults
 %dir %{_sysconfdir}/mateconf/mateconf.xml.mandatory
 %dir %{_sysconfdir}/mateconf/mateconf.xml.system
+%dir %{_sysconfdir}/mateconf/schemas
 %{_sysconfdir}/xdg/autostart/mateconf-gsettings-data-convert.desktop
 %{_datadir}/dbus-1/services/org.mate.MateConf.service
 %{_datadir}/dbus-1/system-services/org.mate.MateConf.Defaults.service
