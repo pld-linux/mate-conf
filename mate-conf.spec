@@ -21,7 +21,7 @@ BuildRequires:	autoconf >= 2.60
 BuildRequires:	automake >= 1:1.9
 BuildRequires:	dbus-devel >= 1.0.0
 BuildRequires:	dbus-glib-devel >= 0.74
-BuildRequires:	gettext-devel
+BuildRequires:	gettext-tools
 BuildRequires:	glib2-devel >= 1:2.26.0
 BuildRequires:	gobject-introspection-devel >= 0.9.5
 %{?with_apidocs:BuildRequires:	gtk-doc >= 1.0}
