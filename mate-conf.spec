@@ -11,7 +11,7 @@ Summary:	MateConf configuration database system
 Summary(pl.UTF-8):	MateConf - system bazy danych konfiguracji
 Name:		mate-conf
 Version:	1.4.0
-Release:	2
+Release:	3
 License:	LGPL v2+
 Group:		Libraries
 Source0:	http://pub.mate-desktop.org/releases/1.4/%{name}-%{version}.tar.xz
@@ -99,6 +99,9 @@ Summary:	MateConf API documentation
 Summary(pl.UTF-8):	Dokumentacja API MateConf
 Group:		Documentation
 Requires:	gtk-doc-common
+%if "%{_rpmversion}" >= "5"
+BuildArch:	noarch
+%endif
 
 %description apidocs
 MateConf API documentation.
