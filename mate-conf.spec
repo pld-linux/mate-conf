@@ -11,7 +11,7 @@ Summary:	MateConf configuration database system
 Summary(pl.UTF-8):	MateConf - system bazy danych konfiguracji
 Name:		mate-conf
 Version:	1.4.0
-Release:	4
+Release:	5
 License:	LGPL v2+
 Group:		Libraries
 Source0:	http://pub.mate-desktop.org/releases/1.4/%{name}-%{version}.tar.xz
